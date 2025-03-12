@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 
 # ✅ Model Configuration
 MODEL_PATH = "random_forest_phishing_model.pkl"
-DRIVE_URL = "https://drive.google.com/uc?export=download&id=1epAux99gIiaFZUG8somh-NpCha7-Bj88"
+DRIVE_URL = "https://drive.google.com/file/d/10groEdIkHnvwpgdvZ8pAA6PSe55rD0wn/view?usp=sharing"
 
 # ✅ Function to Download the Model
 def download_model():
