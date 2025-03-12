@@ -3,7 +3,7 @@
   "name": "Phishing Detector",
   "version": "1.0",
   "description": "Detect phishing sites automatically.",
-  "permissions": ["activeTab", "tabs", "storage"],
+  "permissions": ["activeTab", "tabs", "storage", "notifications"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
@@ -14,5 +14,8 @@
   },
   "icons": {
     "128": "icon.png"
-  }
+  },
+  "host_permissions": [
+    "https://d171-34-16-166-188.ngrok-free.app/*" 
+  ]
 }
