@@ -34,9 +34,20 @@ def predict():
         return jsonify({
             "prediction": "Phishing" if prediction == 1 else "Legit"
         })
+        
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, your app is running!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)  # Use the correct port if needed
 
 # 🚀 Modify Flask to Work on Render
 if __name__ == '__main__':
