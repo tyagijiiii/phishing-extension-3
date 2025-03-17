@@ -3,14 +3,17 @@ import joblib
 import pandas as pd
 from flask import Flask, request, jsonify
 from sklearn.preprocessing import StandardScaler
+import xgboost as xgb
 
-META_MODEL_PATH = "meta_model_xgboost.pkl"
+META_MODEL_PATH = "meta_model_xgboost.json"  # Use JSON instead of .pkl
 
 if os.path.exists(META_MODEL_PATH):
-    meta_model = joblib.load(META_MODEL_PATH)
-    print(" Meta-Model Loaded Successfully!")
+    meta_model = xgb.Booster()
+    meta_model.load_model(META_MODEL_PATH)  # Load JSON model
+    print("✅ Meta-Model Loaded Successfully!")
 else:
-    raise FileNotFoundError(f" {META_MODEL_PATH} not found. Train and save the model first.")
+    raise FileNotFoundError(f"❌ {META_MODEL_PATH} not found. Train and save the model first.")
+
 
 app = Flask(__name__)
 
