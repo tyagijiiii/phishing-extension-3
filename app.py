@@ -1,72 +1,40 @@
 import os
-import requests
 import joblib
 import pandas as pd
-import urllib.parse
 from flask import Flask, request, jsonify
+from sklearn.preprocessing import StandardScaler
 
-# ✅ Model Configuration
-MODEL_PATH = "random_forest_phishing_model.pkl"
-DRIVE_URL = "https://drive.google.com/file/d/10groEdIkHnvwpgdvZ8pAA6PSe55rD0wn/view?usp=sharing"
+META_MODEL_PATH = "meta_model_xgboost.pkl"
 
-# ✅ Function to Download the Model
-def download_model():
-    if os.path.exists(MODEL_PATH):
-        try:
-            model = joblib.load(MODEL_PATH)
-            print("✅ Model loaded successfully!")
-            return model
-        except Exception as e:
-            print(f"⚠️ Model loading failed: {e}. Re-downloading...")
+if os.path.exists(META_MODEL_PATH):
+    meta_model = joblib.load(META_MODEL_PATH)
+    print(" Meta-Model Loaded Successfully!")
+else:
+    raise FileNotFoundError(f" {META_MODEL_PATH} not found. Train and save the model first.")
 
-    print("🔽 Downloading model from Google Drive...")
-    response = requests.get(DRIVE_URL, stream=True)
-    
-    if response.status_code == 200:
-        with open(MODEL_PATH, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-        print("✅ Model downloaded successfully!")
-        return joblib.load(MODEL_PATH)
-    else:
-        raise Exception(f"❌ Failed to download model. Status Code: {response.status_code}")
-
-# ✅ Load Model
-model = download_model()
-
-# ✅ Function to Extract Features from a URL
-def extract_features(url):
-    parsed_url = urllib.parse.urlparse(url)
-    return [
-        len(url),  
-        url.count('.'),  
-        int("@" in url),  
-        int("-" in parsed_url.netloc),  
-        int(parsed_url.scheme == "https"),  
-        parsed_url.netloc.count('.'),  
-        url.count('/'),  
-        sum(c.isdigit() for c in url),  
-        sum(c in "?&=_$" for c in url)  
-    ]
-
-# ✅ Initialize Flask API
 app = Flask(__name__)
+
+scaler = StandardScaler()
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
-    url = data.get('url')
 
-    if not url:
-        return jsonify({"error": "URL missing"}), 400
+    if not isinstance(data, dict) or len(data) != 42:
+        return jsonify({"error": "Invalid input format. Provide exactly 42 numerical features."}), 400
 
-    features = extract_features(url)
-    features_df = pd.DataFrame([features])
-    prediction = model.predict(features_df)[0]
+    try:
+        feature_values = pd.DataFrame([list(data.values())])
+        feature_values_scaled = scaler.fit_transform(feature_values)
+        prediction = meta_model.predict(feature_values_scaled)[0]
 
-    return jsonify({"url": url, "prediction": "Phishing" if prediction == 1 else "Legit"})
+        return jsonify({
+            "prediction": "Phishing" if prediction == 1 else "Legit"
+        })
 
-# ✅ Run Flask App
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 🚀 Modify Flask to Work on Render
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
