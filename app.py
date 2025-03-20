@@ -26,8 +26,9 @@ scaler = StandardScaler()
 def home():
     return "Hello, your phishing detection API is running!"
 
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.route('/predict', methods=['GET', 'POST'])
+
+def predict(): 
     data = request.json
 
     if not isinstance(data, dict) or len(data) != 42:
