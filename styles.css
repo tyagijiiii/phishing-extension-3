@@ -1,39 +1,90 @@
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
 body {
-    font-family: Georgia, serif;
-    background-color: #1e1e2f;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1e1e2f, #252542);
     color: white;
     text-align: center;
-    width: 250px;
+    width: 300px;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.logo {
-    width: 80px;
-    display: block;
-    margin: 0 auto;
+/* Glassmorphism Effect */
+.container {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    box-shadow: 0px 4px 15px rgba(255, 255, 255, 0.1);
 }
 
-h1 {
+/* Title */
+h3 {
     font-size: 20px;
-    margin: 10px 0;
-    color: #ffcc00;
+    font-weight: 600;
+    margin-bottom: 15px;
 }
 
-.result-box {
-    background-color: #2a2a3b;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
-}
-
-#result {
+/* Status Styling */
+#status {
     font-size: 18px;
     font-weight: bold;
-    color: #ff4444;
+    padding: 10px;
+    border-radius: 8px;
+    display: inline-block;
+    transition: all 0.3s ease-in-out;
 }
 
-.footer {
-    font-size: 12px;
-    opacity: 0.8;
+/* Safe Website */
+.safe {
+    color: #21e06e;
+    background: rgba(33, 224, 110, 0.2);
+    border: 1px solid #21e06e;
+    box-shadow: 0px 0px 8px #21e06e;
+}
+
+/* Phishing Warning */
+.phishing {
+    color: #ff4c4c;
+    background: rgba(255, 76, 76, 0.2);
+    border: 1px solid #ff4c4c;
+    box-shadow: 0px 0px 12px #ff4c4c;
+    animation: blink 1s infinite alternate;
+}
+
+/* Blinking Effect for Phishing */
+@keyframes blink {
+    0% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+/* Scan Button */
+#scan {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(255, 75, 43, 0.4);
+}
+
+#scan:hover {
+    background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    box-shadow: 0px 6px 15px rgba(255, 75, 43, 0.6);
+    transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 320px) {
+    body {
+        width: 90%;
+    }
 }
