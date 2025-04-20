@@ -1,4 +1,4 @@
-const API_URL = "https://d171-34-16-166-188.ngrok-free.app/predict"; // Updated API URL
+const API_URL = "https://phishing-extension-3.onrender.com/predict"; // Updated Render API URL
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url) {
@@ -12,7 +12,12 @@ function checkPhishing(url) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         let message = data.prediction === "Phishing" 
             ? "🚨 Warning! This site may be a phishing attempt!" 
@@ -27,5 +32,13 @@ function checkPhishing(url) {
 
         chrome.storage.local.set({ lastResult: message });
     })
-    .catch(error => console.error("Error:", error));
+    .catch(error => {
+        console.error("Error:", error);
+        chrome.notifications.create({
+            type: "basic",
+            iconUrl: "icon.png",
+            title: "Phishing Detector",
+            message: "⚠️ Error detecting site. Please try again later."
+        });
+    });
 }
