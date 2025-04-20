@@ -11,7 +11,7 @@ app = FastAPI()
 
 # Load model and scaler
 scaler_path = "scaler.pkl"
-model_path = "rf_model_tiny.pkl"
+model_path = "rf_model.pkl"
 
 if not os.path.exists(scaler_path) or not os.path.exists(model_path):
     raise FileNotFoundError("Scaler or model not found. Train and save them first.")
