@@ -10,8 +10,8 @@ import pandas as pd
 app = FastAPI()
 
 # Load model and scaler
-scaler_path = "scaler.pkl"
-model_path = "rf_model.pkl"
+model_path = "models/rf_model.pkl"
+scaler_path = "models/scaler.pkl"
 
 if not os.path.exists(scaler_path) or not os.path.exists(model_path):
     raise FileNotFoundError("Scaler or model not found. Train and save them first.")
