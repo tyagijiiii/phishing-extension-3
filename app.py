@@ -1,9 +1,9 @@
-
 import os
 import joblib
 import urllib.parse
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import uvicorn
 
 # 🔥 FastAPI App
 app = FastAPI()
@@ -64,3 +64,7 @@ async def predict(data: URLRequest):
 @app.get("/")
 async def root():
     return {"message": "URL Phishing Detector is running!"}
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Use the port specified by Render or default to 8000
+    uvicorn.run(app, host="0.0.0.0", port=port)
