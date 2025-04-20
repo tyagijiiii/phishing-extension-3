@@ -1,57 +1,66 @@
+
 import os
 import joblib
-import pandas as pd
 import urllib.parse
-from flask import Flask, request, jsonify
-from sklearn.preprocessing import StandardScaler
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-# ✅ Load Meta-Model
-META_MODEL_PATH = "meta_model_xgboost.pkl"
+# 🔥 FastAPI App
+app = FastAPI()
 
-if os.path.exists(META_MODEL_PATH):
-    meta_model = joblib.load(META_MODEL_PATH)
-    print("✅ Meta-Model Loaded Successfully!")
-else:
-    raise FileNotFoundError(f"❌ {META_MODEL_PATH} not found. Train and save the model first.")
+# ⏳ Model placeholder
+rf_model = None
 
-# Function to Extract Features from a URL
-def extract_features(url):
+# ✅ Lazy load Random Forest Model on startup
+@app.on_event("startup")
+def load_model():
+    global rf_model
+    model_path = "models/random_forest_model_compressed.pkl"
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"❌ {model_path} not found. Train and save the model first.")
+    
+    rf_model = joblib.load(model_path)
+    print("✅ Model loaded successfully")
+
+# 🚀 Feature Extraction (no pandas)
+def extract_features(url: str):
     parsed_url = urllib.parse.urlparse(url)
-    return [
-        len(url),  
-        url.count('.'),  
-        int("@" in url),  
-        int("-" in parsed_url.netloc),  
-        int(parsed_url.scheme == "https"),  
-        parsed_url.netloc.count('.'),  
-        url.count('/'),  
-        sum(c.isdigit() for c in url),  
-        sum(c in "?&=_$" for c in url)  
-    ]
+    return [[
+        len(url),
+        url.count('.'),
+        int("@" in url),
+        int("-" in parsed_url.netloc),
+        int(parsed_url.scheme == "https"),
+        parsed_url.netloc.count('.'),
+        url.count('/'),
+        sum(c.isdigit() for c in url),
+        sum(c in "?&=_$" for c in url)
+    ]]
 
-# Initialize Flask API
-app = Flask(__name__)
+# Define Pydantic model for input data validation
+class URLRequest(BaseModel):
+    url: str
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    data = request.json
-    url = data.get('url')
+@app.post("/predict")
+async def predict(data: URLRequest):
+    if rf_model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded yet")
 
+    url = data.url
     if not url:
-        return jsonify({"error": "URL missing"}), 400
+        raise HTTPException(status_code=400, detail="URL is required")
 
-    # Extract Features
     features = extract_features(url)
-    features_df = pd.DataFrame([features])
+    prediction = rf_model.predict(features)[0]
 
-    # Make Prediction using Meta-Model
-    prediction = meta_model.predict(features_df)[0]
-
-    return jsonify({
+    result = {
         "url": url,
         "prediction": "Phishing" if prediction == 1 else "Legit"
-    })
+    }
 
-# Run the Flask App
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    return result
+
+
+@app.get("/")
+async def root():
+    return {"message": "URL Phishing Detector is running!"}
