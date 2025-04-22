@@ -82,4 +82,8 @@ async def predict(req: URLRequest):
             "probabilities": {"Legit": float(proba[0]), "Phishing": float(proba[1])}
         }
     except Exception as e:
+<<<<<<< HEAD
         raise HTTPException(status_code=500, detail=str(e))
+=======
+        raise HTTPException(status_code=500, detail=str(e))
+>>>>>>> cf7a338486d730819faf48096b59314b22f6fd4f
