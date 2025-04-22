@@ -1,12 +1,11 @@
-
 {
   "manifest_version": 3,
   "name": "Phishing Detector",
   "version": "1.0",
   "description": "Detect phishing sites automatically.",
-  "permissions": ["storage", "notifications"],
+  "permissions": ["storage", "notifications", "tabs"],
   "host_permissions": [
-    "https://d171-34-16-166-188.ngrok-free.app/*"
+    "https://phishing-extension-3.onrender.com/*"  // Updated Render URL
   ],
   "background": {
     "service_worker": "background.js"
