@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Literal
 from urllib.parse import urlparse
 import joblib
 import os
@@ -9,92 +8,78 @@ import pandas as pd
 
 app = FastAPI()
 
-# Load model and scaler
+# Paths to model and scaler (trained on 34 features)
 model_path = "models/rf_model.pkl"
 scaler_path = "models/scaler.pkl"
 
-if not os.path.exists(scaler_path) or not os.path.exists(model_path):
-    raise FileNotFoundError("Scaler or model not found. Train and save them first.")
+# Ensure files exist
+for p in (model_path, scaler_path):
+    if not os.path.exists(p):
+        raise FileNotFoundError(f"Required file not found: {p}")
 
-scaler = joblib.load(scaler_path)
+# Load model and scaler
 model = joblib.load(model_path)
+scaler = joblib.load(scaler_path)
+# Determine expected feature count from scaler
+expected_features = scaler.mean_.shape[0]
 
-# Input model
 class URLRequest(BaseModel):
     url: str
 
-# Feature extraction
+# Feature extraction (34 features matching training)
 def extract_url_features(url: str):
-    parsed_url = urlparse(url)
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    subs = domain.split('.')[:-2]
 
-    url_length = len(url)
-    number_of_dots_in_url = url.count('.')
-    having_repeated_digits_in_url = int(len(re.findall(r'(\d)\1', url)) > 0)
-    number_of_digits_in_url = sum(c.isdigit() for c in url)
-    number_of_special_char_in_url = sum(not c.isalnum() and c not in ['-', '_'] for c in url)
-    number_of_hyphens_in_url = url.count('-')
-    number_of_underline_in_url = url.count('_')
-    number_of_slash_in_url = url.count('/')
-    number_of_questionmark_in_url = url.count('?')
-    number_of_equal_in_url = url.count('=')
-    number_of_at_in_url = url.count('@')
-    number_of_dollar_in_url = url.count('$')
-    number_of_exclamation_in_url = url.count('!')
-    number_of_hashtag_in_url = url.count('#')
-    number_of_percent_in_url = url.count('%')
-
-    domain = parsed_url.netloc
-    domain_length = len(domain)
-    number_of_dots_in_domain = domain.count('.')
-    number_of_hyphens_in_domain = domain.count('-')
-    having_special_characters_in_domain = int(bool(re.search(r'[^a-zA-Z0-9.-]', domain)))
-    number_of_special_characters_in_domain = sum(not c.isalnum() and c not in ['-', '.'] for c in domain)
-    having_digits_in_domain = int(any(c.isdigit() for c in domain))
-    number_of_digits_in_domain = sum(c.isdigit() for c in domain)
-    having_repeated_digits_in_domain = int(len(re.findall(r'(\d)\1', domain)) > 0)
-    subdomains = domain.split('.')[:-2]
-    number_of_subdomains = len(subdomains)
-    average_subdomain_length = sum(len(sub) for sub in subdomains) / (number_of_subdomains if number_of_subdomains else 1)
-    number_of_special_characters_in_subdomain = sum(not c.isalnum() and c not in ['-', '.'] for c in ''.join(subdomains))
-    having_digits_in_subdomain = int(any(c.isdigit() for c in ''.join(subdomains)))
-    number_of_digits_in_subdomain = sum(c.isdigit() for c in ''.join(subdomains))
-
-    path_length = len(parsed_url.path)
-    having_query = int(bool(parsed_url.query))
-    having_fragment = int(bool(parsed_url.fragment))
-    having_anchor = int(bool(parsed_url.fragment))
-
-    entropy_of_url = -sum((url.count(c) / len(url)) * (url.count(c) / len(url)) for c in set(url))
-    entropy_of_domain = -sum((domain.count(c) / len(domain)) * (domain.count(c) / len(domain)) for c in set(domain))
-
-    return [
-        url_length, number_of_dots_in_url, having_repeated_digits_in_url, number_of_digits_in_url,
-        number_of_special_char_in_url, number_of_hyphens_in_url, number_of_underline_in_url, number_of_slash_in_url,
-        number_of_questionmark_in_url, number_of_equal_in_url, number_of_at_in_url, number_of_dollar_in_url,
-        number_of_exclamation_in_url, number_of_hashtag_in_url, number_of_percent_in_url, domain_length,
-        number_of_dots_in_domain, number_of_hyphens_in_domain, having_special_characters_in_domain,
-        number_of_special_characters_in_domain, having_digits_in_domain, number_of_digits_in_domain,
-        having_repeated_digits_in_domain, number_of_subdomains, average_subdomain_length,
-        number_of_special_characters_in_subdomain, having_digits_in_subdomain, number_of_digits_in_subdomain,
-        path_length, having_query, having_fragment, having_anchor, entropy_of_url, entropy_of_domain
+    features = [
+        len(url),  # 1
+        url.count('.'),  # 2
+        int(len(re.findall(r"(\d)\1", url)) > 0),  # 3
+        sum(c.isdigit() for c in url),  # 4
+        sum(not c.isalnum() and c not in ['-', '_'] for c in url),  # 5
+        url.count('-'),  # 6
+        url.count('_'),  # 7
+        url.count('/'),  # 8
+        url.count('?'),  # 9
+        url.count('='),  # 10
+        url.count('@'),  # 11
+        url.count('$'),  # 12
+        url.count('!'),  # 13
+        url.count('#'),  # 14
+        url.count('%'),  # 15
+        len(domain),  # 16
+        domain.count('.'),  # 17
+        domain.count('-'),  # 18
+        int(bool(re.search(r"[^a-zA-Z0-9.-]", domain))),  # 19
+        sum(not c.isalnum() and c not in ['-', '.'] for c in domain),  # 20
+        int(any(c.isdigit() for c in domain)),  # 21
+        sum(c.isdigit() for c in domain),  # 22
+        int(len(re.findall(r"(\d)\1", domain)) > 0),  # 23
+        len(subs),  # 24
+        sum(len(s) for s in subs) / (len(subs) if subs else 1),  # 25
+        sum(not c.isalnum() and c not in ['-', '.'] for c in ''.join(subs)),  # 26
+        int(any(c.isdigit() for c in ''.join(subs))),  # 27
+        # Remove or adjust any additional features that exceed 27
     ]
 
-# Prediction endpoint
+    if len(features) != expected_features:
+        raise ValueError(f"Extracted {len(features)} features, but scaler expects {expected_features}")
+    
+    return features
 @app.post("/predict")
-def predict(request: URLRequest):
+async def predict(req: URLRequest):
     try:
-        features = extract_url_features(request.url)
-        features_scaled = scaler.transform([features])
-        prediction = model.predict(features_scaled)[0]
-        probability = model.predict_proba(features_scaled)[0]
-
+        # Extract raw features
+        features = extract_url_features(req.url)
+        # Scale features
+        scaled = scaler.transform([features])
+        # Predict
+        pred = model.predict(scaled)[0]
+        proba = model.predict_proba(scaled)[0]
         return {
-            "prediction": "Phishing" if prediction == 1 else "Legit",
-            "probabilities": {
-                "Legit": probability[0],
-                "Phishing": probability[1]
-            }
+            "prediction": "Phishing" if pred == 1 else "Legit",
+            "probabilities": {"Legit": float(proba[0]), "Phishing": float(proba[1])}
         }
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
