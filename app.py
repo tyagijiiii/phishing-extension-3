@@ -72,11 +72,19 @@ async def predict(req: URLRequest):
     try:
         features = extract_url_features(req.url)
         scaled = scaler.transform([features])
-        pred = model.predict(scaled)[0]
         proba = model.predict_proba(scaled)[0]
+
+        # Custom threshold logic
+        threshold = 0.6
+        prediction_label = "Phishing" if proba[1] > threshold else "Legit"
+
         return {
-            "prediction": "Phishing" if pred == 1 else "Legit",
-            "probabilities": {"Legit": float(proba[0]), "Phishing": float(proba[1])}
+            "prediction": prediction_label,
+            "probabilities": {
+                "Legit": float(proba[0]),
+                "Phishing": float(proba[1])
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
