@@ -81,9 +81,8 @@ async def predict(req: URLRequest):
             "prediction": "Phishing" if pred == 1 else "Legit",
             "probabilities": {"Legit": float(proba[0]), "Phishing": float(proba[1])}
         }
-    except Exception as e:
-<<<<<<< HEAD
-        raise HTTPException(status_code=500, detail=str(e))
+except Exception as e:
+    print("Error:", e)
 =======
         raise HTTPException(status_code=500, detail=str(e))
 >>>>>>> cf7a338486d730819faf48096b59314b22f6fd4f
